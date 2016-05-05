@@ -20,6 +20,9 @@ data UINT8 comRxBuff[RX_BUFF_LEN] = {0xAA,0x2,0x23,0x21,0xCC};      //¶Á°æ±¾
 //UINT8 comRxBuff[RX_BUFF_LEN] = {0xAA,0x7,0x20,0x01,0x30,0x00,0x00,0x00,0x16,0xCC};
 data UINT8 comTxBuff[TX_BUFF_LEN];
 
+data UINT8 a_u8_lastCardId[5] = {0};
+BOOL b_cardRemoveFlag = FALSE;
+
 #define MAX_DATA_LEN		10
 
 typedef struct
@@ -205,7 +208,18 @@ void hwa_uartHandler10ms(void)
                         switch(s_comRxBuff.cmd)
                         {
                             case 0x01:      //Read Money
-                                error = comfun_0x01();
+                            	if(memcmp(a_u8_lastCardId, gCard_UID, 5)
+                            		|| b_cardRemoveFlag == FALSE
+                            		)
+                            	{
+                            		memcpy(a_u8_lastCardId, gCard_UID, 5);
+                                    b_cardRemoveFlag = TRUE;
+                                	error = comfun_0x01();
+                            	}
+                            	else
+                            	{
+                        			error = CE_ERROR;
+                            	}
                                 break;
                             case 0x02:      //Add Money
                                 error = comfun_0x02();
@@ -222,6 +236,7 @@ void hwa_uartHandler10ms(void)
                 }
                 else 
                 {
+                    b_cardRemoveFlag = FALSE;
                     error = CE_ERROR;
                 }
         	}
